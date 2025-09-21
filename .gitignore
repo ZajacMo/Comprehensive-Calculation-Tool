@@ -1,0 +1,96 @@
+# Visual Studio generated files and folders
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.njsproj
+*.sln.local
+
+# Build output
+[Dd]ebug/
+[Rr]elease/
+[Bb]uild/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+*.iobj
+*.ipdb
+*.ilk
+*.pdb
+*.exp
+*.lib
+*.exe
+*.dll
+*.manifest
+*.res
+*.resx
+*.tlog
+*.log
+*.lastbuildstate
+*.bin
+*.obj
+*.pch
+*.idb
+*.sdf
+*.opensdf
+
+# NuGet packages
+packages/
+*.nupkg
+.nuget/
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.suo
+
+# Backup files
+*.bak
+*.old
+*.orig
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test results
+[Bb]in/
+[Oo]bj/
+TestResults/
+*.coverage
+
+# Other files and folders
+*.cache
+*.db
+*.xml
+*.config.user
+*.publishsettings
+*.vsp
+*.vspx
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+*.log
+.cache/
+.temp/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
