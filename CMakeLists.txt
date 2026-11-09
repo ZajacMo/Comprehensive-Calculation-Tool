@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(ComprehensiveCalculationTool
-    VERSION 2.0.0
-    DESCRIPTION "综合计算工具 — 数学计算核心与 Qt 界面"
+    VERSION 2.1.0
+    DESCRIPTION "综合计算工具 — 数学计算内核、命令行、Web 前端与 Qt 界面"
     LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -13,9 +13,13 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-option(BUILD_GUI "构建 Qt 图形界面" ON)
+# 默认只构建不依赖任何第三方库的部分。
+# 内核、命令行与 Web 服务只需要 C++17 编译器；Web 前端是原生 HTML/CSS/JS，
+# 无需 npm 或构建步骤。这样在任意平台上都能构建，不受 Qt SDK 体积限制。
+option(BUILD_GUI "构建 Qt 图形界面（需要 Qt 6）" OFF)
 option(BUILD_CLI "构建命令行界面" ON)
 option(BUILD_TESTS "构建单元测试" ON)
+option(BUILD_SERVER "构建 Web 服务端" ON)
 
 # ---------------------------------------------------------------- 核心算法库
 add_library(calc_core STATIC
@@ -25,7 +29,17 @@ add_library(calc_core STATIC
     src/core/Algebra.cpp
     src/core/Geometry.cpp
     src/core/InputParsing.cpp
+    src/core/LinearAlgebra.cpp
+    src/core/Sequences.cpp
+    src/core/ComplexMath.cpp
+    src/core/Json.cpp
+    src/core/HttpServer.cpp
 )
+
+# HTTP 服务需要套接字库。
+if(WIN32)
+    target_link_libraries(calc_core PUBLIC ws2_32)
+endif()
 
 target_include_directories(calc_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -43,6 +57,29 @@ if(BUILD_CLI)
     if(MSVC)
         target_compile_options(calc_cli PRIVATE /W4 /utf-8)
     endif()
+endif()
+
+# ---------------------------------------------------------------- Web 服务端
+if(BUILD_SERVER)
+    add_executable(calc_server
+        src/server/main.cpp
+        src/api/ApiRoutes.cpp
+        src/api/ApiRoutes.h
+    )
+    target_link_libraries(calc_server PRIVATE calc_core)
+    target_include_directories(calc_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    if(MSVC)
+        target_compile_options(calc_server PRIVATE /W4 /utf-8)
+    endif()
+
+    # 前端资源随构建产物一起部署，方便直接从 build 目录启动。
+    # 用独立的目标而非 POST_BUILD，这样即使可执行文件没有重新链接，
+    # 前端改动也会被同步过去。
+    add_custom_target(web_assets ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_CURRENT_SOURCE_DIR}/web" "$<TARGET_FILE_DIR:calc_server>/web"
+        COMMENT "同步 Web 前端资源到构建目录")
+    add_dependencies(calc_server web_assets)
 endif()
 
 # ---------------------------------------------------------------- 图形界面
@@ -115,6 +152,9 @@ if(BUILD_TESTS)
         tests/tst_geometry.cpp
         tests/tst_inputparsing.cpp
         tests/tst_core.cpp
+        tests/tst_extended.cpp
+        tests/tst_json.cpp
+        tests/tst_http.cpp
     )
     target_link_libraries(calc_tests PRIVATE calc_core)
     if(MSVC)
@@ -122,4 +162,23 @@ if(BUILD_TESTS)
     endif()
 
     add_test(NAME calc_tests COMMAND calc_tests)
+
+    # API 端到端测试：启动服务 → 调用各端点 → 校验返回值。
+    # 需要 Python 3；没有时跳过该用例而不是让构建失败。
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND AND BUILD_SERVER)
+        add_test(NAME api_test
+                 COMMAND ${Python3_EXECUTABLE}
+                         "${CMAKE_CURRENT_SOURCE_DIR}/scripts/api_test.py"
+                         8099
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+        # 测试前先在后台启动服务，测试结束后关闭。
+        set(API_TEST_FIXTURE
+            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/api_test_fixture.cmake")
+        set_tests_properties(api_test PROPERTIES
+            FIXTURES_SETUP calc_server_fixture
+            FIXTURES_REQUIRED calc_server_fixture
+            TIMEOUT 180)
+    endif()
 endif()

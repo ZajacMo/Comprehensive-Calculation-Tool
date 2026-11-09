@@ -2,13 +2,13 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
-namespace calc {
+#include "Numeric.h"
 
-using int64 = std::int64_t;
-using uint64 = std::uint64_t;
+namespace calc {
 
 // 一个质因数及其指数，例如 {3, 2} 表示 3^2。
 struct PrimeFactor {
@@ -47,5 +47,26 @@ int64 divisorSum(int64 n);
 
 int64 gcd(int64 a, int64 b);
 int64 lcm(int64 a, int64 b);
+
+// 扩展欧几里得：求 x, y 使得 a*x + b*y = gcd(a, b)。
+struct ExtendedGcd {
+    int64 gcd = 0;
+    int64 x = 0;
+    int64 y = 0;
+};
+
+ExtendedGcd extendedGcd(int64 a, int64 b);
+
+// 模逆元：求 x 使得 a*x ≡ 1 (mod m)。当 gcd(a, m) != 1 时返回空。
+std::optional<int64> modularInverse(int64 a, int64 m);
+
+// 快速幂 base^exponent mod modulus。
+std::optional<int64> modularPower(int64 base, int64 exponent, int64 modulus);
+
+// 把 n 转换为 base 进制的字符串（base ∈ [2, 36]）。
+std::optional<std::string> toBase(int64 n, int base);
+
+// 把 base 进制的字符串转换为整数。
+std::optional<int64> fromBase(const std::string& text, int base);
 
 }  // namespace calc

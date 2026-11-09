@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <limits>
 #include <numeric>
 #include <sstream>
 
@@ -175,6 +176,126 @@ int64 gcd(int64 a, int64 b) {
 int64 lcm(int64 a, int64 b) {
     if (a == 0 || b == 0) return 0;
     return std::abs(a / gcd(a, b) * b);
+}
+
+ExtendedGcd extendedGcd(int64 a, int64 b) {
+    ExtendedGcd result;
+    if (b == 0) {
+        result.gcd = a;
+        result.x = 1;
+        result.y = 0;
+        return result;
+    }
+    const ExtendedGcd next = extendedGcd(b, a % b);
+    result.gcd = next.gcd;
+    result.x = next.y;
+    result.y = next.x - (a / b) * next.y;
+    return result;
+}
+
+std::optional<int64> modularInverse(int64 a, int64 m) {
+    if (m <= 0) return std::nullopt;
+    const ExtendedGcd egcd = extendedGcd(a, m);
+    if (egcd.gcd != 1) return std::nullopt;
+    // 把 x 归一化到 [0, m)。
+    int64 inverse = egcd.x % m;
+    if (inverse < 0) inverse += m;
+    return inverse;
+}
+
+std::optional<int64> modularPower(int64 base, int64 exponent, int64 modulus) {
+    if (modulus <= 0) return std::nullopt;
+    int64 result = 1 % modulus;
+    base %= modulus;
+    if (base < 0) base += modulus;
+
+    // 模乘用倍增法实现，避免 a*b 溢出 int64。
+    const auto mulMod = [modulus](int64 a, int64 b) -> int64 {
+        int64 product = 0;
+        int64 sum = 0;
+        a %= modulus;
+        while (b > 0) {
+            if (b & 1) {
+                // product + a 不超过 2*modulus，用减法形式避免溢出。
+                sum = (a >= modulus - product) ? a - (modulus - product) : product + a;
+                product = sum;
+            }
+            a = (a >= modulus - a) ? a - (modulus - a) : a + a;
+            b >>= 1;
+        }
+        return product;
+    };
+
+    while (exponent > 0) {
+        if (exponent & 1) result = mulMod(result, base);
+        base = mulMod(base, base);
+        exponent >>= 1;
+    }
+    return result;
+}
+
+std::optional<std::string> toBase(int64 n, int base) {
+    if (base < 2 || base > 36) return std::nullopt;
+    if (n == 0) return std::string("0");
+
+    const bool negative = n < 0;
+    // 取绝对值时避免 INT64_MIN 取负溢出。
+    uint64 magnitude = negative ? (~static_cast<uint64>(n) + 1ULL) : static_cast<uint64>(n);
+
+    const char* digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    std::string result;
+    while (magnitude > 0) {
+        result.insert(result.begin(), digits[magnitude % static_cast<uint64>(base)]);
+        magnitude /= static_cast<uint64>(base);
+    }
+    if (negative) result.insert(result.begin(), '-');
+    return result;
+}
+
+std::optional<int64> fromBase(const std::string& text, int base) {
+    if (base < 2 || base > 36) return std::nullopt;
+
+    size_t index = 0;
+    bool negative = false;
+    if (index < text.size() && (text[index] == '-' || text[index] == '+')) {
+        negative = (text[index] == '-');
+        ++index;
+    }
+    if (index >= text.size()) return std::nullopt;
+
+    const int64 limit = std::numeric_limits<int64>::max();
+    uint64 magnitude = 0;
+    for (; index < text.size(); ++index) {
+        const char c = text[index];
+        int digit = -1;
+        if (c >= '0' && c <= '9') {
+            digit = c - '0';
+        } else if (c >= 'A' && c <= 'Z') {
+            digit = c - 'A' + 10;
+        } else if (c >= 'a' && c <= 'z') {
+            digit = c - 'a' + 10;
+        } else {
+            return std::nullopt;
+        }
+        if (digit >= base) return std::nullopt;
+
+        const uint64 b = static_cast<uint64>(base);
+        // 检查 magnitude * base + digit 是否溢出。
+        if (magnitude > (static_cast<uint64>(limit) - static_cast<uint64>(digit)) / b) {
+            return std::nullopt;
+        }
+        magnitude = magnitude * b + static_cast<uint64>(digit);
+    }
+
+    if (negative) {
+        if (magnitude > static_cast<uint64>(limit) + 1ULL) return std::nullopt;
+        if (magnitude == static_cast<uint64>(limit) + 1ULL) {
+            return std::numeric_limits<int64>::min();
+        }
+        return -static_cast<int64>(magnitude);
+    }
+    if (magnitude > static_cast<uint64>(limit)) return std::nullopt;
+    return static_cast<int64>(magnitude);
 }
 
 }  // namespace calc

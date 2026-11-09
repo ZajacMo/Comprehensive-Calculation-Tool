@@ -3,15 +3,19 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "core/Algebra.h"
+#include "core/ComplexMath.h"
 #include "core/Geometry.h"
 #include "core/InputParsing.h"
+#include "core/LinearAlgebra.h"
 #include "core/NumberTheory.h"
 #include "core/Numeric.h"
+#include "core/Sequences.h"
 #include "core/Statistics.h"
 
 namespace {
@@ -42,11 +46,20 @@ void printUsage() {
   tetrahedron <x1> <y1> <z1> ... <x4> <y4> <z4>
   solid <sphere|cylinder|cone|prism|pyramid> <参数...>
 
+线性代数:
+  matrix <rows> <cols> <v1> <v2> ...      行列式、秩、转置与逆矩阵
+  solve-system <b1> ... <bn> -- <a11> ...  求解线性方程组
+
+其他:
+  sequences <n>                斐波那契、卢卡斯、卡特兰数、阶乘、整数分拆数
+  base-convert <value> <base>  进制转换
+
 示例:
   calc_cli factorize 1000000000
   calc_cli quadratic 1 -5 6
   calc_cli regress 1 2 2 4 3 6
   calc_cli solid cylinder 2 5
+  calc_cli matrix 2 2 1 2 3 4
 )";
 }
 
@@ -303,6 +316,148 @@ int commandSolid(const std::vector<std::string>& args) {
     return 0;
 }
 
+int commandMatrix(const std::vector<std::string>& args) {
+    // 用法：calc_cli matrix <rows> <cols> <v1> <v2> ...
+    if (args.size() < 4) {
+        std::cerr << "用法：calc_cli matrix <rows> <cols> <v1> <v2> ...\n";
+        return 1;
+    }
+    const auto rowsParsed = calc::parseInteger(args[1]);
+    const auto colsParsed = calc::parseInteger(args[2]);
+    if (!rowsParsed.ok || !colsParsed.ok || rowsParsed.value <= 0 || colsParsed.value <= 0) {
+        std::cerr << "行数与列数必须是正整数。\n";
+        return 1;
+    }
+    std::vector<double> values;
+    if (!parseArgs(args, 3, values)) return 1;
+
+    const size_t rows = static_cast<size_t>(rowsParsed.value);
+    const size_t cols = static_cast<size_t>(colsParsed.value);
+    if (values.size() != rows * cols) {
+        std::cerr << "元素个数应为 " << (rows * cols) << "，实际为 " << values.size() << "。\n";
+        return 1;
+    }
+
+    calc::Matrix matrix(rows, cols);
+    for (size_t r = 0; r < rows; ++r) {
+        for (size_t c = 0; c < cols; ++c) {
+            matrix.set(r, c, values[r * cols + c]);
+        }
+    }
+
+    std::cout << "矩阵     = " << matrix.describe() << "\n";
+    std::cout << "行列式   = " << calc::formatReal(matrix.determinant()) << "\n";
+    std::cout << "秩       = " << matrix.rank() << "\n";
+    std::cout << "是否对称 = " << (matrix.isSymmetric() ? "是" : "否") << "\n";
+    const auto inverse = matrix.inverse();
+    if (inverse.has_value()) {
+        std::cout << "逆矩阵   = " << inverse->describe() << "\n";
+    } else {
+        std::cout << "逆矩阵   = 不存在（矩阵奇异）\n";
+    }
+    return 0;
+}
+
+int commandSolveSystem(const std::vector<std::string>& args) {
+    // 用法：calc_cli solve-system <b1> <b2> ... -- <a11> <a12> ...
+    // 第一个参数之后用 -- 分隔系数矩阵与右端项。
+    std::vector<std::string> rightSide;
+    std::vector<std::string> coefficients;
+    bool afterSeparator = false;
+    for (size_t i = 1; i < args.size(); ++i) {
+        if (args[i] == "--") {
+            afterSeparator = true;
+            continue;
+        }
+        (afterSeparator ? coefficients : rightSide).push_back(args[i]);
+    }
+
+    std::vector<double> b;
+    std::vector<double> a;
+    if (!parseArgs(rightSide, 0, b) || !parseArgs(coefficients, 0, a)) return 1;
+
+    const size_t n = b.size();
+    if (n == 0 || a.size() != n * n) {
+        std::cerr << "用法：calc_cli solve-system <b1> ... <bn> -- <a11> <a12> ...\n";
+        std::cerr << "系数矩阵应有 " << (n * n) << " 个元素。\n";
+        return 1;
+    }
+
+    calc::Matrix matrix(n, n);
+    for (size_t r = 0; r < n; ++r) {
+        for (size_t c = 0; c < n; ++c) {
+            matrix.set(r, c, a[r * n + c]);
+        }
+    }
+
+    const auto result = calc::solveLinearSystemDetailed(matrix, b);
+    if (!result.valid) {
+        std::cerr << result.reason << "\n";
+        return 1;
+    }
+    if (result.hasInfiniteSolutions) {
+        std::cout << "有无穷多解，自由变量：";
+        for (int index : result.freeVariables) std::cout << "x" << (index + 1) << " ";
+        std::cout << "\n其中一个解：";
+        for (double v : result.solution) std::cout << calc::formatReal(v) << " ";
+        std::cout << "\n";
+    } else {
+        std::cout << "唯一解：";
+        for (double v : result.solution) std::cout << calc::formatReal(v) << " ";
+        std::cout << "\n";
+    }
+    return 0;
+}
+
+int commandSequences(const std::vector<std::string>& args) {
+    if (args.size() != 2) {
+        std::cerr << "用法：calc_cli sequences <n>\n";
+        return 1;
+    }
+    const auto parsed = calc::parseInteger(args[1]);
+    if (!parsed.ok || parsed.value < 0) {
+        std::cerr << "n 必须是不小于 0 的整数。\n";
+        return 1;
+    }
+    const calc::uint64 n = static_cast<calc::uint64>(parsed.value);
+
+    const auto fib = calc::fibonacci(n);
+    const auto luc = calc::lucas(n);
+    const auto cat = calc::catalan(n);
+    const auto fact = calc::factorial(n);
+    const auto part = calc::integerPartition(n);
+
+    std::cout << "n            = " << n << "\n";
+    std::cout << "斐波那契 F(n) = " << (fib.has_value() ? std::to_string(*fib) : "超出 64 位范围") << "\n";
+    std::cout << "卢卡斯 L(n)   = " << (luc.has_value() ? std::to_string(*luc) : "超出 64 位范围") << "\n";
+    std::cout << "卡特兰数 C(n) = " << (cat.has_value() ? std::to_string(*cat) : "超出范围") << "\n";
+    std::cout << "阶乘 n!       = " << (fact.has_value() ? std::to_string(*fact) : "超出范围") << "\n";
+    std::cout << "分拆数 p(n)   = " << (part.has_value() ? std::to_string(*part) : "超出范围") << "\n";
+    return 0;
+}
+
+int commandBaseConvert(const std::vector<std::string>& args) {
+    if (args.size() != 3) {
+        std::cerr << "用法：calc_cli base-convert <value> <base>\n";
+        return 1;
+    }
+    const auto baseParsed = calc::parseInteger(args[2]);
+    if (!baseParsed.ok || baseParsed.value < 2 || baseParsed.value > 36) {
+        std::cerr << "进制必须在 2 到 36 之间。\n";
+        return 1;
+    }
+    const auto value = calc::fromBase(args[1], static_cast<int>(baseParsed.value));
+    if (!value.has_value()) {
+        std::cerr << "'" << args[1] << "' 不是合法的 " << baseParsed.value << " 进制整数。\n";
+        return 1;
+    }
+    std::cout << "十进制 = " << *value << "\n";
+    for (int base : {2, 8, 10, 16, 36}) {
+        std::cout << std::setw(2) << base << " 进制 = " << calc::toBase(*value, base).value_or("") << "\n";
+    }
+    return 0;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -328,6 +483,10 @@ int main(int argc, char** argv) {
     if (command == "triangle") return commandTriangle(args);
     if (command == "tetrahedron") return commandTetrahedron(args);
     if (command == "solid") return commandSolid(args);
+    if (command == "matrix") return commandMatrix(args);
+    if (command == "solve-system") return commandSolveSystem(args);
+    if (command == "sequences") return commandSequences(args);
+    if (command == "base-convert") return commandBaseConvert(args);
 
     std::cerr << "未知命令：" << command << "\n\n";
     printUsage();

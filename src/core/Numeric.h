@@ -4,11 +4,16 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <cstdint>
 #include <string>
 
 namespace calc {
 
 using Complex = std::complex<double>;
+
+// 整型别名集中定义在此，避免各模块重复 typedef 造成冲突。
+using int64 = std::int64_t;
+using uint64 = std::uint64_t;
 
 // MSVC 不提供 M_PI，这里统一使用自有常量。
 constexpr double kPi = 3.14159265358979323846;
