@@ -1,96 +1,70 @@
-# Visual Studio generated files and folders
-.vs/
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-*.njsproj
-*.sln.local
-
-# Build output
+# 构建输出
+build/
+build-*/
+out/
+cmake-build-*/
+x64/
+x86/
 [Dd]ebug/
 [Rr]elease/
 [Bb]uild/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-*.iobj
-*.ipdb
-*.ilk
-*.pdb
-*.exp
-*.lib
+*.obj
+*.o
 *.exe
 *.dll
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.idb
+*.ipdb
+*.iobj
 *.manifest
 *.res
-*.resx
+*.pch
 *.tlog
 *.log
 *.lastbuildstate
 *.bin
-*.obj
-*.pch
-*.idb
-*.sdf
-*.opensdf
 
-# NuGet packages
-packages/
-*.nupkg
-.nuget/
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeUserPresets.json
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+install_manifest.txt
+compile_commands.json
+.ninja_deps
+.ninja_log
+build.ninja
 
-# Visual C++ cache files
-ipch/
+# Visual Studio / MFC 生成物
+.vs/
+*.sln.docstates
+*.user
+*.suo
 *.aps
 *.ncb
 *.opendb
 *.opensdf
 *.sdf
-*.suo
+*.VC.db
+*.VC.VC.opendb
 
-# Backup files
-*.bak
-*.old
-*.orig
+# IDE / 编辑器
+.vscode/
+.idea/
 *.swp
 *.swo
+*~
 
-# OS generated files
+# 系统
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Test results
-[Bb]in/
-[Oo]bj/
-TestResults/
-*.coverage
-
-# Other files and folders
-*.cache
-*.db
-*.xml
-*.config.user
-*.publishsettings
-*.vsp
-*.vspx
-
-# Temporary files
-*.tmp
-*.temp
-*.cache
-*.log
-.cache/
-.temp/
-
-# Environment variables
+# 环境与密钥
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*

@@ -1,169 +1,192 @@
 # 综合计算工具 / Comprehensive Calculation Tool
+
+一个面向数学计算的桌面工具，提供数论、统计、代数与空间几何四大类功能。
+
+v2 版本基于 **Qt 6 + CMake** 重写：所有算法集中在零依赖的纯 C++ 内核
+（`src/core/`），图形界面（`src/ui/`）与命令行前端（`src/cli/`）共享同一套实现。
+
 ---
-## 项目介绍
-## Project Introduction
-这是一个基于MFC（Microsoft Foundation Classes）框架开发的综合计算工具应用程序，提供多种数学计算功能，包括质因数分解、三维三角形计算、线性回归分析和二次方程求解等。
-This is a comprehensive calculation tool application developed based on the MFC (Microsoft Foundation Classes) framework, providing various mathematical calculation functions including prime factorization, 3D triangle calculation, linear regression analysis, and quadratic equation solving.
 
-## 功能模块
-## Functional Modules
+## 目录结构
 
-### 1. 质因数分解器
-### 1. Prime Factorization Tool
-输入一个2到1000000000之间的正整数，程序将自动分解其质因数并以乘法形式显示结果。
-Input a positive integer between 2 and 1,000,000,000, and the program will automatically decompose its prime factors and display the result in multiplication form.
-
-### 2. 三维三角形计算器
-### 2. 3D Triangle Calculator
-输入三维空间中三角形的三个顶点坐标(x1,y1,z1)、(x2,y2,z2)、(x3,y3,z3)，程序将计算并显示三角形的面积和周长。
-Input the coordinates of three vertices (x1,y1,z1), (x2,y2,z2), (x3,y3,z3) of a triangle in 3D space, and the program will calculate and display the area and perimeter of the triangle.
-
-### 3. 线性回归分析器
-### 3. Linear Regression Analyzer
-最多可输入10个二维数据点(x,y)，程序将计算：
-You can input up to 10 two-dimensional data points (x,y), and the program will calculate:
-- 平均值(\(\bar{x}\), \(\bar{y}\))
-- Mean values (\(\bar{x}\), \(\bar{y}\))
-- 回归系数k和b (回归方程：y = kx + b)
-- Regression coefficients k and b (regression equation: y = kx + b)
-- 相关系数r
-- Correlation coefficient r
-- 可根据输入的x值预测对应的y值
-- Predict the corresponding y value based on the input x value
-
-### 4. 二次方程求解器
-### 4. Quadratic Equation Solver
-支持两种输入方式求解二次方程：
-Supports two input methods to solve quadratic equations:
-1. 标准式：ax² + bx + c = 0
-1. Standard form: ax² + bx + c = 0
-2. 顶点式：a(x - h)² + k = 0
-2. Vertex form: a(x - h)² + k = 0
-程序将计算判别式并显示实根（如果存在）。
-The program will calculate the discriminant and display real roots (if they exist).
-
-## 系统要求
-## System Requirements
-- 操作系统：Windows 7/8/10/11
-- Operating System: Windows 7/8/10/11
-- 编译器：Visual Studio 2019或更高版本（支持MFC）
-- Compiler: Visual Studio 2019 or higher (supporting MFC)
-- 架构：x64
-- Architecture: x64
-
-## 使用说明
-## User Guide
-1. 启动应用程序后，会显示主菜单界面
-1. After starting the application, the main menu interface will be displayed
-2. 点击相应的功能按钮进入对应计算模块
-2. Click the corresponding function button to enter the corresponding calculation module
-3. 按照界面提示输入相关数据
-3. Enter relevant data according to the interface prompts
-4. 点击计算按钮获取结果
-4. Click the calculate button to get the result
-5. 点击返回或关闭按钮返回主菜单
-5. Click the back or close button to return to the main menu
-
-## 编译指南
-## Compilation Guide
-1. 使用Visual Studio打开`综合计算工具.sln`解决方案文件
-1. Open the `综合计算工具.sln` solution file with Visual Studio
-2. 设置编译配置为`Release`或`Debug`
-2. Set the compilation configuration to `Release` or `Debug`
-3. 选择目标平台为`x64`
-3. Select the target platform as `x64`
-4. 点击生成->生成解决方案或按F7编译项目
-4. Click Build->Build Solution or press F7 to compile the project
-5. 编译完成后，可在`x64/Release`或`x64/Debug`目录下找到可执行文件
-5. After compilation is complete, the executable file can be found in the `x64/Release` or `x64/Debug` directory
-
-## 项目结构
-## Project Structure
 ```
 综合计算工具/
-Comprehensive Calculation Tool/
-├── 综合计算工具.cpp          # 应用程序入口文件
-├── 综合计算工具.cpp          # Application entry file
-├── 综合计算工具.h            # 应用程序头文件
-├── 综合计算工具.h            # Application header file
-├── 综合计算工具.sln          # 解决方案文件
-├── 综合计算工具.sln          # Solution file
-├── 综合计算工具.vcxproj      # 项目文件
-├── 综合计算工具.vcxproj      # Project file
-├── MENU.cpp                  # 主菜单对话框实现
-├── MENU.cpp                  # Main menu dialog implementation
-├── MENU.h                    # 主菜单对话框头文件
-├── MENU.h                    # Main menu dialog header file
-├── SEPERATER.cpp             # 质因数分解器实现
-├── SEPERATER.cpp             # Prime factorization tool implementation
-├── SEPERATER.h               # 质因数分解器头文件
-├── SEPERATER.h               # Prime factorization tool header file
-├── TRIANGLE.cpp              # 三角形计算器实现
-├── TRIANGLE.cpp              # Triangle calculator implementation
-├── TRIANGLE.h                # 三角形计算器头文件
-├── TRIANGLE.h                # Triangle calculator header file
-├── Regression_line.cpp       # 线性回归分析器实现
-├── Regression_line.cpp       # Linear regression analyzer implementation
-├── Regression_line.h         # 线性回归分析器头文件
-├── Regression_line.h         # Linear regression analyzer header file
-├── EQUATION.cpp              # 二次方程求解器实现
-├── EQUATION.cpp              # Quadratic equation solver implementation
-├── EQUATION.h                # 二次方程求解器头文件
-├── EQUATION.h                # Quadratic equation solver header file
-├── TIP.cpp                   # 提示对话框实现
-├── TIP.cpp                   # Tip dialog implementation
-├── TIP.h                     # 提示对话框头文件
-├── TIP.h                     # Tip dialog header file
-├── pch.cpp                   # 预编译头实现
-├── pch.cpp                   # Precompiled header implementation
-├── pch.h                     # 预编译头文件
-├── pch.h                     # Precompiled header file
-├── framework.h               # MFC框架头文件
-├── framework.h               # MFC framework header file
-├── resource.h                # 资源定义头文件
-├── resource.h                # Resource definition header file
-├── My.rc                     # 资源文件
-├── My.rc                     # Resource file
-└── res/                      # 资源文件夹
-└── res/                      # Resource folder
-    └── *.ico                 # 图标文件
-    └── *.ico                 # Icon files
+├── CMakeLists.txt          # 顶层构建脚本
+├── src/
+│   ├── core/               # 算法内核：纯 C++17，不依赖任何 GUI 框架
+│   │   ├── NumberTheory.*  # 质因数分解、素性判定、欧拉函数、莫比乌斯函数
+│   │   ├── Statistics.*    # 描述统计、最小二乘线性回归、相关系数
+│   │   ├── Algebra.*       # 一次/二次方程、顶点式、多项式数值求根
+│   │   ├── Geometry.*      # 三维向量、三角形、四面体、常见几何体
+│   │   ├── InputParsing.*  # 输入校验（GUI 与 CLI 共用）
+│   │   └── Numeric.*       # 复数、浮点容差比较、统一格式化
+│   ├── ui/                 # Qt 6 Widgets 界面
+│   └── cli/                # 命令行前端
+├── tests/                  # 单元测试 + 界面离屏渲染冒烟测试
+├── scripts/                # Windows 下的构建与运行脚本
+└── legacy/mfc/             # v1 的 MFC 实现，仅作历史存档
 ```
 
-## 开发说明
-## Development Notes
-- 项目使用MFC对话框作为界面基础
-- The project uses MFC dialog boxes as the interface foundation
-- 所有计算功能均封装在独立的对话框类中
-- All calculation functions are encapsulated in independent dialog classes
-- 使用DDX/DDV机制进行数据交换和验证
-- Using DDX/DDV mechanism for data exchange and validation
-- 输入验证确保用户输入的数据有效性
-- Input validation ensures the validity of user input data
-- 采用面向对象的设计方式，便于功能扩展
-- Adopting an object-oriented design approach for easy function expansion
+---
 
-## 注意事项
-## Notes
-1. 输入数据时请确保格式正确，避免非数字字符
-1. Please ensure the correct format when entering data and avoid non-numeric characters
-2. 质因数分解功能仅支持2到1000000000之间的正整数
-2. The prime factorization function only supports positive integers between 2 and 1,000,000,000
-3. 线性回归分析至少需要输入2个数据点
-3. Linear regression analysis requires at least 2 data points to be input
-4. 二次方程求解时请确保输入有效的二次函数
-4. Please ensure that a valid quadratic function is input when solving quadratic equations
+## 功能
 
-## 更新日志
-## Update Log
-- 初始版本：实现所有基础计算功能
-- Initial version: Implemented all basic calculation functions
-- 优化用户界面和输入验证机制
-- Optimized user interface and input validation mechanism
-- 完善错误处理和提示信息
-- Improved error handling and prompt messages
+### 1. 质因数分解
+
+输入不小于 2 的整数，得到：
+
+- 质因数分解（如 `10⁹ = 2⁹ × 5⁹`）
+- 是否为素数（确定性 Miller-Rabin，对 64 位无符号整数范围正确）
+- 欧拉函数 φ(n)、莫比乌斯函数 μ(n)
+- 正约数个数与正约数之和
+- 最大公约数与最小公倍数
+
+试除法只试到 √n，10⁹ 级别输入即时返回。
+
+### 2. 统计与回归
+
+在表格中录入任意数量的 (x, y) 数据点，得到：
+
+- x 与 y 各自的均值、中位数、方差、标准差、极差、Q1/Q3 与四分位距
+- 最小二乘拟合直线的斜率 k、截距 b
+- 相关系数 r、决定系数 R²、斜率标准误
+- 代入任意 x 预测 y
+
+### 3. 方程求解
+
+- 一次方程 `ax + b = 0`
+- 二次方程 `ax² + bx + c = 0`（判别式为负时给出共轭复根）
+- 二次方程顶点式 `a(x − h)² + k = 0`（自动展开并显示展开式）
+- 任意次数多项式求根（Aberth–Ehrlich 数值法，系数按降幂排列）
+
+### 4. 空间几何
+
+- 三维三角形：面积、周长、三边长与最大高，含退化检测
+- 四面体：体积、表面积、重心、外接球球心与半径、内切球半径
+- 球、圆柱、圆锥、正棱柱、正棱锥的表面积与体积
+
+### 5. 三角形计算
+
+三维空间三角形计算器，从 v1 继承并修复了退化检测与精度问题。
+
+---
+
+## 构建
+
+### 依赖
+
+- CMake ≥ 3.21
+- C++17 编译器（MSVC v143 / GCC / Clang）
+- Qt 6（仅图形界面需要；构建内核、命令行与测试则不需要）
+
+### 用 CMake 构建
+
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=<Qt6 安装路径>
+cmake --build build
+```
+
+可选开关：
+
+| 选项 | 默认 | 说明 |
+|---|---|---|
+| `BUILD_GUI` | ON | 构建 Qt 图形界面 |
+| `BUILD_CLI` | ON | 构建命令行前端 |
+| `BUILD_TESTS` | ON | 构建测试 |
+
+### Windows 一键脚本
+
+```bat
+scripts\build.bat            % 构建全部
+scripts\build-core.bat       % 只构建内核、命令行与测试（不需要 Qt）
+scripts\run-tests.bat        % 运行单元测试
+scripts\run-ctest.bat        % 运行全部 CTest 用例
+scripts\run-gui-smoke.bat    % 离屏渲染各界面并输出截图
+scripts\cli.bat <命令>       % 调用命令行前端
+```
+
+---
+
+## 运行
+
+### 图形界面
+
+```bash
+./build/calc_gui
+```
+
+### 命令行
+
+```bash
+./build/calc_cli help
+```
+
+| 命令 | 说明 |
+|---|---|
+| `factorize <n>` | 质因数分解，并给出 φ、μ、约数个数与约数和 |
+| `isprime <n>` | 素性判定 |
+| `stats <v1> <v2> ...` | 描述统计 |
+| `regress <x1> <y1> ...` | 线性回归，参数按 x y 交替给出 |
+| `linear <a> <b>` | 求解 ax + b = 0 |
+| `quadratic <a> <b> <c>` | 求解 ax² + bx + c = 0 |
+| `vertex <a> <h> <k>` | 求解 a(x − h)² + k = 0 |
+| `poly <c0> <c1> ...` | 多项式求根，系数按降幂排列 |
+| `triangle <9 个坐标>` | 三角形面积与周长 |
+| `tetrahedron <12 个坐标>` | 四面体体积与表面积 |
+| `solid <类型> <参数...>` | 常见几何体的表面积与体积 |
+
+示例：
+
+```console
+$ calc_cli factorize 1000000000
+n         = 1000000000
+质因数分解 = 2^9 * 5^9
+是否素数   = 否
+欧拉函数 φ = 400000000
+莫比乌斯 μ = 0
+约数个数   = 100
+约数和     = 2497558338
+
+$ calc_cli quadratic 1 -5 6
+判别式 Δ = 1.000000
+x₁ = 3.000000 ,  x₂ = 2.000000
+```
+
+---
+
+## 测试
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+两个测试套件：
+
+- **`calc_tests`** — 60 个单元测试用例，覆盖全部算法内核。
+  每个 v1 缺陷都有一条对应的回归测试。
+- **`gui_smoke`** — 离屏渲染冒烟测试：实例化每个界面、驱动一次真实计算、
+  并把窗口渲染成 PNG（输出到 `build/screenshots/`）。
+  用 `QT_QPA_PLATFORM=offscreen` 运行，不需要显示器。
+
+测试框架是 `tests/test_framework.h` —— 一个约 100 行、零外部依赖的断言库，
+因此单元测试不依赖 Qt，可在任意 C++17 工具链下运行。
+
+---
+
+## v1 的问题与修复
+
+v1 的 MFC 实现保留在 `legacy/mfc/`。重写过程中发现并修复了其中 6 处**真实的算法错误**，
+逐条记录在 `legacy/mfc/README.md`，每条都有对应的回归测试。摘要：
+
+- 二次方程求根公式写错（`-0.5*(b±√Δ)/c`），导致**所有非平凡二次方程的解都是错的**
+- 顶点式展开时符号错误（`+2a` 应为 `-2a`）
+- 线性回归分页收集数据点时漏算/多算（数据点数为 5 的倍数时）
+- 回归用 `(0,0)` 判定空行，合法的原点数据点被跳过
+- 质因数分解 O(n) 试除，10⁹ 附近素数会让界面卡死十余秒
+- 三角形缺少退化检测，三点共线时静默输出面积 0
+
+---
 
 ## 许可证
-## License
+
 本项目为学习用途开发，仅供个人学习和参考使用。
-This project is developed for learning purposes and is for personal study and reference only.

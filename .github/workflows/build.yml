@@ -1,0 +1,64 @@
+name: 构建与测试
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  core:
+    # 内核、命令行与单元测试不需要 Qt，可在任意平台构建。
+    name: 核心算法与单元测试 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 配置
+        run: >
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_GUI=OFF -DBUILD_CLI=ON -DBUILD_TESTS=ON
+
+      - name: 编译
+        run: cmake --build build --config Release
+
+      - name: 运行单元测试
+        run: ctest --test-dir build --output-on-failure -C Release
+
+  gui:
+    # 图形界面需要 Qt 6，用 aqtinstall 拉取。
+    name: 图形界面构建 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.2'
+          modules: ''
+          cache: true
+
+      - name: 配置
+        run: >
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_GUI=ON -DBUILD_CLI=ON -DBUILD_TESTS=ON
+          -DCMAKE_PREFIX_PATH=${{ steps.aqt.outputs.qt_root_dir }}/${{ steps.aqt.outputs.qt_arch }}
+
+      - name: 编译
+        run: cmake --build build --config Release
+
+      - name: 界面冒烟测试
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ctest --test-dir build --output-on-failure -C Release -R gui_smoke
