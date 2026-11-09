@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""端到端 API 测试：逐个调用 /api/* 端点并校验返回的数值。
+"""端到端 API 测试：拉起服务 → 逐个调用 /api/* 端点 → 校验返回的数值。
 
 用法：python scripts/api_test.py [端口]
-默认端口 8099。
+默认端口 8099。若该端口已有服务在跑，则直接复用。
 """
 import json
 import math
+import os
+import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -16,6 +19,62 @@ BASE = f"http://127.0.0.1:{PORT}"
 
 failures = []
 checks = 0
+server_process = None
+
+
+def isServerUp():
+    """服务是否已经在运行。"""
+    try:
+        with urllib.request.urlopen(f"{BASE}/api/health", timeout=2) as response:
+            return response.status == 200
+    except Exception:
+        return False
+
+
+def startServer():
+    """若服务未运行，则启动一个。返回进程对象（可能为 None，表示复用了已有服务）。"""
+    global server_process
+    if isServerUp():
+        print("检测到已在运行的服务，直接复用。")
+        return None
+
+    # 优先用构建目录里的可执行文件。
+    candidates = [
+        os.path.join("build", "calc_server.exe"),
+        os.path.join("build", "calc_server"),
+        os.path.join("..", "build", "calc_server.exe"),
+        os.path.join("..", "build", "calc_server"),
+    ]
+    executable = next((c for c in candidates if os.path.exists(c)), None)
+    if executable is None:
+        print("找不到 calc_server 可执行文件，请先构建。")
+        sys.exit(2)
+
+    print(f"启动服务：{executable} --port {PORT}")
+    server_process = subprocess.Popen(
+        [executable, "--port", str(PORT), "--no-browser"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    # 等待服务就绪。
+    for _ in range(50):
+        time.sleep(0.2)
+        if isServerUp():
+            print("服务已就绪。")
+            return server_process
+    print("服务启动超时。")
+    server_process.terminate()
+    sys.exit(2)
+
+
+def stopServer():
+    if server_process is not None:
+        server_process.terminate()
+        try:
+            server_process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            server_process.kill()
 
 
 def call(path, **params):
@@ -49,6 +108,14 @@ def section(name):
 
 
 def main():
+    startServer()
+    try:
+        return runChecks()
+    finally:
+        stopServer()
+
+
+def runChecks():
     section("健康检查")
     health = call("/api/health")
     check("status", health["status"], "ok")

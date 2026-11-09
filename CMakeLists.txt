@@ -167,18 +167,14 @@ if(BUILD_TESTS)
     # 需要 Python 3；没有时跳过该用例而不是让构建失败。
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND AND BUILD_SERVER)
+        # 用一个独立的 fixture 脚本负责启停服务，避免测试依赖图出现环。
         add_test(NAME api_test
                  COMMAND ${Python3_EXECUTABLE}
                          "${CMAKE_CURRENT_SOURCE_DIR}/scripts/api_test.py"
                          8099
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-        # 测试前先在后台启动服务，测试结束后关闭。
-        set(API_TEST_FIXTURE
-            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/api_test_fixture.cmake")
-        set_tests_properties(api_test PROPERTIES
-            FIXTURES_SETUP calc_server_fixture
-            FIXTURES_REQUIRED calc_server_fixture
-            TIMEOUT 180)
+        # 服务由 api_test.py 自行拉起与关闭，这里只登记超时。
+        set_tests_properties(api_test PROPERTIES TIMEOUT 180)
     endif()
 endif()
