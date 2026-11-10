@@ -43,6 +43,9 @@ endif()
 
 target_include_directories(calc_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+# 统一的警告等级。MSVC 与 GCC/Clang 的开关名不同，分开处理。
+# 注意：MSVC 会传递性地带入一些标准库头文件（如 <algorithm>），
+# 掩盖缺失 include 的问题；GCC 不会。CI 里专门有一个 GCC 作业来暴露这类缺陷。
 if(MSVC)
     target_compile_options(calc_core PRIVATE /W4 /permissive- /utf-8)
     target_compile_definitions(calc_core PRIVATE _CRT_SECURE_NO_WARNINGS)
@@ -50,13 +53,20 @@ else()
     target_compile_options(calc_core PRIVATE -Wall -Wextra)
 endif()
 
+# 供各可执行目标复用的警告开关。
+function(calc_set_warnings target)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /W4 /utf-8)
+    else()
+        target_compile_options(${target} PRIVATE -Wall -Wextra)
+    endif()
+endfunction()
+
 # ---------------------------------------------------------------- 命令行界面
 if(BUILD_CLI)
     add_executable(calc_cli src/cli/main.cpp)
     target_link_libraries(calc_cli PRIVATE calc_core)
-    if(MSVC)
-        target_compile_options(calc_cli PRIVATE /W4 /utf-8)
-    endif()
+    calc_set_warnings(calc_cli)
 endif()
 
 # ---------------------------------------------------------------- Web 服务端
@@ -68,9 +78,7 @@ if(BUILD_SERVER)
     )
     target_link_libraries(calc_server PRIVATE calc_core)
     target_include_directories(calc_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-    if(MSVC)
-        target_compile_options(calc_server PRIVATE /W4 /utf-8)
-    endif()
+    calc_set_warnings(calc_server)
 
     # 前端资源随构建产物一起部署，方便直接从 build 目录启动。
     # 用独立的目标而非 POST_BUILD，这样即使可执行文件没有重新链接，
@@ -106,9 +114,7 @@ if(BUILD_GUI)
     )
 
     target_link_libraries(calc_gui PRIVATE calc_core Qt6::Widgets)
-    if(MSVC)
-        target_compile_options(calc_gui PRIVATE /W4 /utf-8)
-    endif()
+    calc_set_warnings(calc_gui)
 
     # GUI 运行时需要 Qt 插件目录，便于从构建目录直接启动。
     if(WIN32)
@@ -130,9 +136,7 @@ if(BUILD_GUI)
         )
         target_link_libraries(gui_smoke PRIVATE calc_core Qt6::Widgets)
         target_include_directories(gui_smoke PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/ui)
-        if(MSVC)
-            target_compile_options(gui_smoke PRIVATE /W4 /utf-8)
-        endif()
+        calc_set_warnings(gui_smoke)
 
         add_test(NAME gui_smoke
                  COMMAND gui_smoke ${CMAKE_CURRENT_BINARY_DIR}/screenshots)
@@ -157,9 +161,7 @@ if(BUILD_TESTS)
         tests/tst_http.cpp
     )
     target_link_libraries(calc_tests PRIVATE calc_core)
-    if(MSVC)
-        target_compile_options(calc_tests PRIVATE /W4 /utf-8)
-    endif()
+    calc_set_warnings(calc_tests)
 
     add_test(NAME calc_tests COMMAND calc_tests)
 

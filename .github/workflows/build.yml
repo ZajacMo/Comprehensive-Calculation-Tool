@@ -43,6 +43,28 @@ jobs:
           kill $SERVER_PID 2>/dev/null || true
           exit $STATUS
 
+  gcc:
+    # 显式用 GCC 构建。MSVC 会传递性地带入一些标准库头文件（如 <algorithm>），
+    # 掩盖缺失 include 的问题；GCC 不会，因此这个作业专门用来暴露
+    # "在 MSVC 上能编、在 GCC 上编不过" 的可移植性缺陷。
+    name: GCC 兼容性构建
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 配置
+        run: >
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_GUI=OFF -DBUILD_CLI=ON -DBUILD_SERVER=ON -DBUILD_TESTS=ON
+          -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc
+
+      - name: 编译
+        run: cmake --build build --config Release
+
+      - name: 运行单元测试
+        run: ctest --test-dir build --output-on-failure -C Release
+
   gui:
     # 图形界面需要 Qt 6，用 aqtinstall 拉取。
     name: 图形界面构建 (${{ matrix.os }})
