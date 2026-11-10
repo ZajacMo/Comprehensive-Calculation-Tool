@@ -35,11 +35,6 @@ bool solve3x3(double m[3][3], double rhs[3], double out[3]) {
     return true;
 }
 
-// 三点构成平面的法向量。
-Vec3 normalOf(const Vec3& a, const Vec3& b, const Vec3& c) {
-    return (b - a).cross(c - a);
-}
-
 // 计算四面体四个面的面积。
 double tetrahedronSurfaceArea(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) {
     double total = 0.0;
